@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Wireless Attack Simulator</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#111;
+color:white;
+}
+
+.container{
+display:flex;
+height:100vh;
+}
+
+.desktop{
+width:50%;
+position:relative;
+overflow:hidden;
+}
+
+.kali{
+
+background:url("https://www.kali.org/wallpapers/images/2025/kali-tiles.jpg");
+background-size:cover;
+}
+
+.windows{
+background:url("https://wallpaperaccess.com/full/317501.jpg");
+background-size:cover;
+
+}
+
+/* icons */
+
+.icon{
+width:80px;
+margin:20px;
+text-align:center;
+cursor:pointer;
+}
+
+.icon img{
+width:48px;
+}
+
+/* terminal */
+
+
+.window{
+position:absolute;
+top:70px;
+left:70px;
+width:500px;
+height:500px;
+background:black;
+border:2px solid #333;
+display:none;
+z-index:10;
+box-shadow:0 0 20px rgba(0,0,0,0.7);
+}
+.title{
+background:#ddd;
+color:black;
+padding:5px;
+}
+
+.title button{
+float:right;
+}
+
+.terminal{
+padding:10px;
+font-family:monospace;
+color:#22c55e;
+height:400px;
+overflow:auto;
+}
+
+.prompt{
+padding:5px;
+}
+
+.prompt input{
+background:black;
+border:none;
+color:#22c55e;
+width:70%;
+}
+
+/* browser */
+.browser{
+position:absolute;
+top:60px;
+left:60px;
+width:520px;
+height:460px;
+background:white;
+color:black;
+border-radius:10px;
+overflow:hidden;
+box-shadow:0 10px 30px rgba(0,0,0,0.5);
+border:1px solid #ccc;
+}
+
+/* browser top bar */
+.browserBar{
+background:#f1f1f1;
+padding:8px;
+font-weight:bold;
+display:flex;
+align-items:center;
+gap:10px;
+border-bottom:1px solid #ddd;
+}
+
+/* browser buttons */
+
+.browserButtons{
+display:flex;
+gap:6px;
+}
+
+.dot{
+width:12px;
+height:12px;
+border-radius:50%;
+}
+
+.red{background:#ff5f57;}
+.yellow{background:#febc2e;}
+.green{background:#28c840;}
+
+/* search bar */
+
+.searchBar{
+flex:1;
+display:flex;
+align-items:center;
+background:white;
+border:1px solid #ccc;
+border-radius:6px;
+padding:4px 8px;
+}
+
+.searchBar input{
+border:none;
+outline:none;
+flex:1;
+font-size:13px;
+}
+
+.searchIcon{
+width:16px;
+margin-right:6px;
+opacity:0.6;
+}
+
+
+/* content area */
+
+.browserContent{
+padding:15px;
+height:800px;
+overflow-y:auto;
+font-size:14px;
+line-height:1.5;
+}
+
+/* nicer lists */
+
+.browserContent ul{
+padding-left:18px;
+}
+
+.browserContent li{
+margin-bottom:6px;
+}
+/* wifi reconnect */
+
+.networkMenu{
+position:absolute;
+bottom:40px;
+right:20px;
+background:#1e293b;
+padding:10px;
+width:200px;
+display:none;
+}
+
+/* wireshark */
+
+.wireshark{
+position:absolute;
+top:70px;
+left:60px;
+width:800px;
+height:300px;
+background:white;
+color:black;
+border:2px solid #333;
+display:none;
+z-index:11;
+}
+
+.packetList{
+height:260px;
+overflow:auto;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+font-size:12px;
+}
+
+td,th{
+border:1px solid #ccc;
+padding:4px;
+}
+/* Wireshark professional UI */
+
+.menuBar{
+background:#dcdcdc;
+padding:4px;
+font-size:12px;
+}
+
+.toolbar{
+background:#f5f5f5;
+padding:4px;
+}
+
+.beacon{background:#e6f2ff;}
+.eapol{background:#fff3cd;}
+.encrypted{background:#f8d7da;}
+
+
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- Kali Desktop -->
+
+<div class="desktop kali">
+
+<div class="icon" onclick="openTerminal()">
+<img src="https://cdn-icons-png.flaticon.com/512/906/906324.png">
+Terminal
+</div>
+
+<div class="icon" id="capIcon" style="display:none" onclick="openWireshark()">
+<img src="https://cdn-icons-png.flaticon.com/512/337/337946.png">
+capture.cap
+</div>
+
+<div class="window" id="terminal">
+
+<div class="title">
+Terminal
+<button onclick="closeTerminal()">X</button>
+</div>
+
+<div class="terminal" id="term"></div>
+
+<div class="prompt">
+kali@kali:~$
+<input id="cmd">
+<button onclick="run()">Run</button>
+</div>
+
+</div>
+
+</div>
+
+<!-- Victim Desktop -->
+
+<div class="desktop windows">
+
+<div class="browser">
+
+<div class="browserBar">
+
+<div class="browserButtons">
+<div class="dot red"></div>
+<div class="dot yellow"></div>
+<div class="dot green"></div>
+</div>
+
+<div class="searchBar">
+<img class="searchIcon" src="https://cdn-icons-png.flaticon.com/512/622/622669.png">
+<input type="text" placeholder="Search Global News...">
+</div>
+
+</div>
+
+<div class="browserContent" id="browserContent">
+
+<h1 style="color:#b91c1c;">Global News Network</h1>
+
+<div style="background:#dc2626;color:white;padding:6px;font-weight:bold;">
+🔴 BREAKING NEWS: Global cybersecurity alert issued after major WiFi attacks
+</div>
+
+<br>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+
+<!-- Story 1 -->
+
+<div style="background:#f3f4f6;padding:10px;border-radius:6px;">
+<img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b" width="100%">
+<h3>Cybersecurity Alert</h3>
+<p>
+<img src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png" width="18">
+Security experts warn about rising wireless attacks in public spaces.
+</p>
+</div>
+
+<!-- Story 2 -->
+
+<div style="background:#f3f4f6;padding:10px;border-radius:6px;">
+<img src="https://images.unsplash.com/photo-1518770660439-4636190af475" width="100%">
+<h3>Technology Update</h3>
+<p>
+<img src="https://cdn-icons-png.flaticon.com/512/1048/1048949.png" width="18">
+New AI-driven cybersecurity systems introduced worldwide.
+</p>
+</div>
+
+<!-- Story 3 -->
+
+<div style="background:#f3f4f6;padding:10px;border-radius:6px;">
+<img src="https://images.unsplash.com/photo-1510511459019-5dda7724fd87" width="100%">
+<h3>Global Economy</h3>
+<p>
+<img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png" width="18">
+Financial institutions increase investment in cyber defense.
+</p>
+</div>
+
+<!-- Story 4 -->
+
+<div style="background:#f3f4f6;padding:10px;border-radius:6px;">
+<img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d" width="100%">
+<h3>World News</h3>
+<p>
+<img src="https://cdn-icons-png.flaticon.com/512/747/747310.png" width="18">
+Global leaders discuss international digital security policies.
+</p>
+</div>
+
+</div>
+
+<hr>
+
+<h3>
+<img src="https://cdn-icons-png.flaticon.com/512/1828/1828919.png" width="20">
+Trending Topics
+</h3>
+
+<ul>
+<li>#CyberSecurity</li>
+<li>#WiFiSafety</li>
+<li>#DigitalPrivacy</li>
+<li>#AIinSecurity</li>
+</ul>
+
+<hr>
+
+<p style="color:gray;font-size:12px;">
+© 2026 Global News Network
+</p>
+
+</div>
+</div>
+<div class="networkMenu" id="wifiMenu">
+
+<b>HomeWiFi</b>
+
+<br><br>
+
+Password
+
+<br>
+
+<input id="wifiPass">
+
+<br><br>
+
+<button onclick="reconnectWifi()">Connect</button>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- Wireshark -->
+<div class="wireshark" id="wireshark">
+
+<!-- Top Window Title -->
+<div class="title">
+Wireshark — capture.cap
+<button onclick="closeWireshark()">X</button>
+</div>
+
+<!-- Wireshark Menu -->
+<!-- Wireshark Menu -->
+<div class="menuBar">
+
+<span class="menuItem">File</span>
+
+<span class="menuItem" onclick="openPreferences()">Edit</span>
+
+<span class="menuItem">View</span>
+<span class="menuItem">Go</span>
+<span class="menuItem">Capture</span>
+<span class="menuItem">Analyze</span>
+<span class="menuItem">Statistics</span>
+<span class="menuItem">Telephony</span>
+<span class="menuItem">Wireless</span>
+<span class="menuItem">Tools</span>
+<span class="menuItem">Help</span>
+
+</div>
+<div class="window" id="preferencesWindow" style="width:650px;height:420px;display:none;background:white;color:black;z-index:20;left:120px;top:80px;">
+
+<div class="title">
+Wireshark · Preferences
+<button onclick="closePreferences()">X</button>
+</div>
+
+<div style="display:flex;height:360px;">
+
+<!-- left panel -->
+
+<div style="width:180px;border-right:1px solid #ccc;padding:10px;font-size:13px;">
+
+<div>HTTP</div>
+<div>ICMP</div>
+<div>TCP</div>
+<div>UDP</div>
+
+<div style="margin-top:10px;font-weight:bold;cursor:pointer;" onclick="open80211()">
+IEEE 802.11
+</div>
+
+</div>
+
+<!-- right panel -->
+
+<div id="prefContent" style="flex:1;padding:15px;font-size:13px;">
+
+Select a protocol on the left.
+
+</div>
+
+</div>
+
+</div><div id="ieeePanel" style="display:none">
+
+<h3>IEEE 802.11 wireless LAN</h3>
+
+<label>
+<input type="checkbox" checked>
+Enable decryption
+</label>
+
+<br><br>
+
+Decryption keys
+
+<button onclick="openKeys()">Edit</button>
+
+</div>
+<div class="window" id="keyWindow" style="width:420px;height:220px;display:none;background:white;color:black;z-index:30;left:200px;top:140px;">
+
+<div class="title">
+WEP and WPA Decryption Keys
+<button onclick="closeKeys()">X</button>
+</div>
+
+<div style="padding:15px;font-size:13px;">
+
+<table style="width:100%;border-collapse:collapse">
+
+<tr style="background:#eee">
+<th style="border:1px solid #ccc;padding:4px">Key type</th>
+<th style="border:1px solid #ccc;padding:4px">Key</th>
+</tr>
+
+<tr>
+<td style="border:1px solid #ccc;padding:4px">wpa-pwd</td>
+<td style="border:1px solid #ccc;padding:4px">
+<input id="wpaKeyInput" placeholder="Enter WPA password">
+</td>
+</tr>
+
+</table>
+
+<br>
+
+<button onclick="applyKey()">OK</button>
+
+</div>
+
+</div>
+
+<!-- Toolbar -->
+
+
+<div class="packetList">
+
+<!-- WPA Key Input Panel -->
+
+<div id="keyPanel" style="display:none;padding:10px;background:#f0f0f0;border-bottom:1px solid #ccc;">
+
+<b>IEEE 802.11 Decryption Key</b>
+
+<br><br>
+
+<input id="wpaKey" placeholder="Enter WPA/WPA2 Passphrase" style="padding:5px;width:220px;">
+
+<button onclick="applyKey()">Apply Key</button>
+
+</div>
+
+
+<!-- Packet Table -->
+
+<table id="packets">
+
+<tr style="background:#e5e5e5;font-weight:bold;">
+<th>No</th>
+<th>Time</th>
+<th>Source</th>
+<th>Destination</th>
+<th>Protocol</th>
+<th>Length</th>
+<th>Info</th>
+</tr>
+
+<tr class="beacon">
+<td>1</td>
+<td>0.000</td>
+<td>34:8A:AE:21:4F:11</td>
+<td>ff:ff:ff:ff:ff:ff</td>
+<td>802.11</td>
+<td>120</td>
+<td>Beacon frame (SSID: HomeWiFi)</td>
+</tr>
+
+<tr class="eapol">
+<td>2</td>
+<td>0.100</td>
+<td>34:8A:AE:21:4F:11</td>
+<td>E4:5E:37:01:0F:C2</td>
+<td>EAPOL</td>
+<td>121</td>
+<td>WPA Key (Message 1 of 4)</td>
+</tr>
+
+<tr class="eapol">
+<td>3</td>
+<td>0.102</td>
+<td>E4:5E:37:01:0F:C2</td>
+<td>34:8A:AE:21:4F:11</td>
+<td>EAPOL</td>
+<td>121</td>
+<td>WPA Key (Message 2 of 4)</td>
+</tr>
+
+<tr class="eapol">
+<td>4</td>
+<td>0.104</td>
+<td>34:8A:AE:21:4F:11</td>
+<td>E4:5E:37:01:0F:C2</td>
+<td>EAPOL</td>
+<td>121</td>
+<td>WPA Key (Message 3 of 4)</td>
+</tr>
+
+<tr class="eapol">
+<td>5</td>
+<td>0.106</td>
+<td>E4:5E:37:01:0F:C2</td>
+<td>34:8A:AE:21:4F:11</td>
+<td>EAPOL</td>
+<td>121</td>
+<td>WPA Key (Message 4 of 4)</td>
+</tr>
+
+<tr class="encrypted">
+<td>6</td>
+<td>0.230</td>
+<td>192.168.1.10</td>
+<td>142.250.190.78</td>
+<td>TCP</td>
+<td>95</td>
+<td>Encrypted Application Data</td>
+</tr>
+
+<tr class="encrypted">
+<td>7</td>
+<td>0.235</td>
+<td>142.250.190.78</td>
+<td>192.168.1.10</td>
+<td>TCP</td>
+<td>100</td>
+<td>Encrypted Application Data</td>
+</tr>
+<tr class="encrypted">
+<td>8</td>
+<td>0.240</td>
+<td>192.168.1.10</td>
+<td>142.250.190.78</td>
+<td>TCP</td>
+<td>88</td>
+<td>Encrypted Application Data</td>
+</tr>
+
+<tr class="encrypted">
+<td>9</td>
+<td>0.245</td>
+<td>142.250.190.78</td>
+<td>192.168.1.10</td>
+<td>TCP</td>
+<td>120</td>
+<td>Encrypted Application Data</td>
+</tr>
+
+<tr class="encrypted">
+<td>10</td>
+<td>0.248</td>
+<td>192.168.1.10</td>
+<td>8.8.8.8</td>
+<td>UDP</td>
+<td>74</td>
+<td>Encrypted DNS Query</td>
+</tr>
+
+<tr class="encrypted">
+<td>11</td>
+<td>0.252</td>
+<td>8.8.8.8</td>
+<td>192.168.1.10</td>
+<td>UDP</td>
+<td>98</td>
+<td>Encrypted DNS Response</td>
+</tr>
+
+<tr class="encrypted">
+<td>12</td>
+<td>0.260</td>
+<td>192.168.1.10</td>
+<td>142.250.190.78</td>
+<td>TCP</td>
+<td>102</td>
+<td>Encrypted TLS Application Data</td>
+</tr>
+
+<tr class="encrypted">
+<td>13</td>
+<td>0.270</td>
+<td>142.250.190.78</td>
+<td>192.168.1.10</td>
+<td>TCP</td>
+<td>140</td>
+<td>Encrypted TLS Application Data</td>
+</tr>
+
+<tr class="encrypted">
+<td>14</td>
+<td>0.280</td>
+<td>192.168.1.10</td>
+<td>172.217.18.14</td>
+<td>TCP</td>
+<td>95</td>
+<td>Encrypted Application Data</td>
+</tr>
+
+<tr class="encrypted">
+<td>15</td>
+<td>0.295</td>
+<td>172.217.18.14</td>
+<td>192.168.1.10</td>
+<td>TCP</td>
+<td>130</td>
+<td>Encrypted Application Data</td>
+</tr>
+</table>
+
+</div>
+
+</div>
+<script>
+
+
+let captureStarted=false
+let handshakeCaptured=false
+
+function openTerminal(){
+document.getElementById("terminal").style.display="block"
+}
+
+function closeTerminal(){
+document.getElementById("terminal").style.display="none"
+}
+
+function print(t){
+
+let term=document.getElementById("term")
+
+term.innerHTML+="<br>"+t
+
+term.scrollTop=term.scrollHeight
+
+}
+let monitorMode = false;
+
+function run(){
+
+let cmd=document.getElementById("cmd").value.trim()
+
+print("kali@kali:~$ "+cmd)
+
+/* scan networks */
+if(cmd.includes("airodump-ng wlan0mon") && !cmd.includes("-w")){
+
+print(" CH  6 ][ Elapsed: 24 s ][ 2026-03-10 16:46 ")
+print("")
+print("BSSID              PWR  RXQ  Beacons  #Data  CH  MB  ENC  CIPHER AUTH ESSID")
+print("34:8A:AE:21:4F:11  -42  100      243    223   6  405 WPA2 CCMP   PSK  HomeWiFi")
+print("44:7A:AE:31:9F:13  -61  100       54     18   6  405 WPA2 CCMP   PSK  BookStore")
+print("74:3A:AE:24:8F:21  -70  100       77     12   6  405 WPA2 CCMP   PSK  VictorsCafe")
+print("44:2A:AE:81:3F:93  -75  100       39      6   6  405 WPA2 CCMP   PSK  DansHome")
+
+print("")
+print("BSSID              STATION              PWR   Rate   Lost  Frames  Notes  Probes")
+print("34:8A:AE:21:4F:11  E4:5E:37:01:0F:C2    -42   1e-0     0     60")
+print("34:8A:AE:21:4F:11  30:07:4D:E5:02:EE    -31   1e-24    0      4")
+print("34:8A:AE:21:4F:11  32:42:C8:08:57:42    -32   1e-1     0      4")
+
+}
+
+else if(cmd.includes("airodump-ng") && cmd.includes("-w")){
+
+captureStarted = true
+
+document.getElementById("capIcon").style.display="block"
+
+print(" CH  6 ][ Elapsed: 12 s ][ 2026-03-10 16:52 ")
+print("")
+print("BSSID              PWR  Beacons  #Data  #/s  CH  MB  ENC  CIPHER AUTH ESSID")
+print("34:8A:AE:21:4F:11  -42      320     88    2   6  405 WPA2 CCMP   PSK  HomeWiFi")
+
+print("")
+print("BSSID              STATION              PWR   Rate   Lost  Frames  Notes  Probes")
+print("34:8A:AE:21:4F:11  E4:5E:37:01:0F:C2    -42   1e-0     0      60")
+
+print("")
+print("Waiting for WPA handshake from 34:8A:AE:21:4F:11 ...")
+
+}
+
+/* deauth attack */
+
+else if(cmd.includes("aireplay-ng")){
+
+print("18:45:12  Waiting for beacon frame (BSSID: 34:8A:AE:21:4F:11) on channel 6")
+print("18:45:13  Sending 64 directed DeAuth (code 7). STMAC: [E4:5E:37:01:0F:C2] [ 0| 0 ACKs]")
+print("18:45:14  Sending 64 directed DeAuth (code 7). STMAC: [E4:5E:37:01:0F:C2] [ 0| 0 ACKs]")
+print("18:45:15  Sending 64 directed DeAuth (code 7). STMAC: [E4:5E:37:01:0F:C2] [ 0| 0 ACKs]")
+
+disconnectVictim()
+
+setTimeout(function(){
+    print("")
+    print("Client attempting to reconnect to HomeWiFi...")
+    
+},3000)
+
+}
+
+else if(cmd.includes("stop")){
+
+print("Interface      Driver     Chipset");
+print("(mac80211 station mode vif enabled for [phy0]wlan0 on [phy0]wlan0mon)");
+print("(mac80211 monitor mode vif disabled for [phy0]wlan0)");
+
+
+
+}
+
+/* crack password */
+
+else if(cmd.includes("aircrack-ng")){
+
+if(handshakeCaptured){
+
+print("Aircrack-ng 1.6")
+print("")
+print("[00:00:01] 4934/10303715 keys tested (4616.34 k/s)")
+print("")
+print("Time left: 37 minutes, 11 seconds                                     0.05%")
+print("")
+print("KEY FOUND! [ summer2024 ]")
+print("")
+print("Master Key     : 42 F5 71 13 82 7D A3 BE 84 C2 AD C0 D7 DA 53 54")
+print("                 D1 E6 0F 86 C2 66 A9 48 98 0E 7E 8C 51 94 7C A3")
+print("")
+print("Transient Key  : 92 1C 0E 6B 64 3B F7 26 15 E5 BD 16 35 4B 5E 5C")
+print("                 29 E8 94 19 4A 9F F2 86 37 E0 5C DC 5D 65 B3 01")
+print("")
+print("EAPOL HMAC     : 93 54 6E 80 15 25 3B 5F 91 25 21 61 17 F8 EE 3B")
+
+}else{
+
+print("Aircrack-ng 1.6")
+print("")
+print("Opening capture.cap")
+print("No valid WPA handshake found")
+
+}
+
+}
+else if(cmd.includes("iwconfig")){
+
+print("wlan0     IEEE 802.11  ESSID:\"HomeWiFi\"");
+
+if(monitorMode){
+print("          Mode:Monitor  Frequency:2.437 GHz");
+print("          Tx-Power=20 dBm");
+}else{
+print("          Mode:Managed  Frequency:2.437 GHz  Access Point: 34:8A:AE:21:4F:11");
+print("          Bit Rate=72.2 Mb/s   Tx-Power=20 dBm");
+}
+
+}
+else if(cmd.includes("airmon-ng start")){
+print("");
+print("PHY     Interface       Driver          Chipset");
+print("");
+print("phy0    wlan0           iwlwifi         Intel Wireless 8265");
+print("");
+print("(mac80211 monitor mode vif enabled for [phy0]wlan0 on [phy0]wlan0mon)");
+print("(mac80211 station mode vif disabled for [phy0]wlan0)");
+print("");
+print("Monitor mode enabled on wlan0mon");
+monitorMode = true;
+
+}
+else if(cmd.includes("kill"))
+{
+print("");
+print("Killing processes that may interfere with monitor mode");
+print("");
+print("PID     Name");
+print("732     NetworkManager");
+print("845     wpa_supplicant");
+print("912     dhclient");
+print("");
+print("Process with PID 732 (NetworkManager) killed");
+print("Process with PID 845 (wpa_supplicant) killed");
+print("Process with PID 912 (dhclient) killed");
+print("");
+print("All interfering processes terminated.");
+
+}
+else{
+
+print("Command executed")
+
+}
+
+document.getElementById("cmd").value=""
+
+}
+function openPreferences(){
+
+alert("Wireshark Preferences opened")
+
+}
+
+function open80211(){
+
+alert("IEEE 802.11 protocol settings")
+
+}
+
+function openKeys(){
+
+document.getElementById("keyPanel").style.display="block"
+
+}
+
+function applyKey(){
+
+let key=document.getElementById("wpaKeyInput").value
+
+if(key=="summer2024:HomeWifi"){
+
+decryptPackets()
+
+alert("802.11 Decryption Enabled")
+
+}else{
+
+alert("Wrong key")
+
+}
+
+}
+function decryptPackets(){
+
+document.querySelectorAll(".encrypted").forEach(row=>{
+
+row.cells[4].innerText="HTTP"
+row.cells[6].innerText="GET /news.html"
+
+})
+
+}
+function disconnectVictim(){
+
+let page=document.getElementById("browserContent")
+
+page.innerHTML = `
+<h2 style="color:red">Network Disconnected</h2>
+<p>The WiFi connection was interrupted.</p>
+<p>Attempting reconnection...</p>
+`
+
+setTimeout(function(){
+
+document.getElementById("wifiMenu").style.display="block"
+
+},2000)
+
+}
+
+function reconnectWifi(){
+
+let password=document.getElementById("wifiPass").value
+
+if(password==="summer2024"){
+
+document.getElementById("wifiMenu").style.display="none"
+
+restoreBrowser()
+
+captureHandshake()
+
+
+}else{
+
+alert("Incorrect password")
+
+}
+
+}
+
+function restoreBrowser(){
+
+let page=document.getElementById("browserContent")
+
+page.innerHTML=`<h1 style="color:#b91c1c;">Global News Network</h1>
+
+<div style="background:#dc2626;color:white;padding:6px;font-weight:bold;">
+🔴 BREAKING NEWS: Global cybersecurity alert issued after major WiFi attacks
+</div>
+
+<br>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+
+<!-- Story 1 -->
+
+<div style="background:#f3f4f6;padding:10px;border-radius:6px;">
+<img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b" width="100%">
+<h3>Cybersecurity Alert</h3>
+<p>
+<img src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png" width="18">
+Security experts warn about rising wireless attacks in public spaces.
+</p>
+</div>
+
+<!-- Story 2 -->
+
+<div style="background:#f3f4f6;padding:10px;border-radius:6px;">
+<img src="https://images.unsplash.com/photo-1518770660439-4636190af475" width="100%">
+<h3>Technology Update</h3>
+<p>
+<img src="https://cdn-icons-png.flaticon.com/512/1048/1048949.png" width="18">
+New AI-driven cybersecurity systems introduced worldwide.
+</p>
+</div>
+
+<!-- Story 3 -->
+
+<div style="background:#f3f4f6;padding:10px;border-radius:6px;">
+<img src="https://images.unsplash.com/photo-1510511459019-5dda7724fd87" width="100%">
+<h3>Global Economy</h3>
+<p>
+<img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png" width="18">
+Financial institutions increase investment in cyber defense.
+</p>
+</div>
+
+<!-- Story 4 -->
+
+<div style="background:#f3f4f6;padding:10px;border-radius:6px;">
+<img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d" width="100%">
+<h3>World News</h3>
+<p>
+<img src="https://cdn-icons-png.flaticon.com/512/747/747310.png" width="18">
+Global leaders discuss international digital security policies.
+</p>
+</div>
+
+</div>
+
+<hr>
+
+<h3>
+<img src="https://cdn-icons-png.flaticon.com/512/1828/1828919.png" width="20">
+Trending Topics
+</h3>
+
+<ul>
+<li>#CyberSecurity</li>
+<li>#WiFiSafety</li>
+<li>#DigitalPrivacy</li>
+<li>#AIinSecurity</li>
+</ul>
+
+<hr>
+
+<p style="color:gray;font-size:12px;">
+© 2026 Global News Network
+</p>
+
+</div>`
+
+}
+
+function captureHandshake(){
+
+if(captureStarted){
+
+handshakeCaptured=true
+
+print("WPA handshake: 34:8A:AE:21:4F:11")
+
+}
+
+}
+
+function openWireshark(){
+document.getElementById("wireshark").style.display="block"
+}
+
+function closeWireshark(){
+document.getElementById("wireshark").style.display="none"
+}
+
+document.getElementById("cmd").addEventListener("keypress",function(e){
+
+if(e.key==="Enter"){
+run()
+}
+
+})
+function openPreferences(){
+
+document.getElementById("preferencesWindow").style.display="block"
+
+}
+
+function closePreferences(){
+
+document.getElementById("preferencesWindow").style.display="none"
+
+}
+
+function open80211(){
+
+let panel=document.getElementById("prefContent")
+
+panel.innerHTML=document.getElementById("ieeePanel").innerHTML
+
+}
+
+function openKeys(){
+
+document.getElementById("keyWindow").style.display="block"
+
+}
+
+function closeKeys(){
+
+document.getElementById("keyWindow").style.display="none"
+
+}
+
+</script>
+
+</body>
+</html>
